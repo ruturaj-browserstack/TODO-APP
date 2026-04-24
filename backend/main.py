@@ -65,6 +65,13 @@ def create_todo(payload: TodoIn):
     return todo
 
 
+@app.delete("/api/todos/completed", status_code=204)
+def delete_completed_todos():
+    for tid in [tid for tid, t in _todos.items() if t.completed]:
+        del _todos[tid]
+    return None
+
+
 @app.patch("/api/todos/{todo_id}", response_model=Todo)
 def update_todo(todo_id: int, payload: TodoUpdate):
     todo = _todos.get(todo_id)
