@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 export default function Todos() {
   const [todos, setTodos] = useState([]);
   const [title, setTitle] = useState('');
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function load() {
@@ -46,6 +47,16 @@ export default function Todos() {
     await load();
   }
 
+  async function clearCompleted() {
+    await fetch('/api/todos/completed', { method: 'DELETE' });
+    await load();
+  }
+
+  const visible = query
+    ? todos.filter((t) => t.title.includes(query))
+    : todos;
+  const completedCount = todos.filter((t) => t.completed).length;
+
   return (
     <section>
       <h2>Todos</h2>
@@ -62,11 +73,32 @@ export default function Todos() {
         </button>
       </form>
 
+      <div className="row" style={{ marginTop: 10 }}>
+        <input
+          type="text"
+          placeholder="Search todos"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          data-testid="search-input"
+        />
+        <button
+          type="button"
+          className="secondary"
+          data-testid="clear-completed-btn"
+          onClick={clearCompleted}
+          disabled={completedCount === 0}
+        >
+          Clear completed
+        </button>
+      </div>
+
       <ul className="todo-list" data-testid="todo-list">
-        {todos.length === 0 && (
-          <li data-testid="todo-empty">No todos yet</li>
+        {visible.length === 0 && (
+          <li data-testid="todo-empty">
+            {todos.length === 0 ? 'No todos yet' : 'No matches'}
+          </li>
         )}
-        {todos.map((t) => (
+        {visible.map((t) => (
           <li
             key={t.id}
             className={t.completed ? 'completed' : ''}
@@ -94,9 +126,7 @@ export default function Todos() {
       <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>
         <span data-testid="todo-count">{todos.length} total</span>
         {' · '}
-        <span data-testid="todo-completed-count">
-          {todos.filter((t) => t.completed).length} completed
-        </span>
+        <span data-testid="todo-completed-count">{completedCount} completed</span>
       </div>
     </section>
   );
